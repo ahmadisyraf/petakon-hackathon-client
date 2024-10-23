@@ -1,6 +1,7 @@
-import CardContainer from "@/components/auth/CardContainer";
+import CardContainer from "@/components/card-container";
 import { Alert, AlertIcon, AlertText } from "@/components/ui/alert";
-import { Button, ButtonText } from "@/components/ui/button";
+import { Box } from "@/components/ui/box";
+import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
 import {
   FormControl,
   FormControlError,
@@ -17,7 +18,10 @@ import {
   useToast,
 } from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
-import { createUser } from "@/services/user"; // Ensure this is your API function
+import useLoading from "@/hooks/useLoading";
+import { createUser } from "@/services/user";
+import { useSessionStore } from "@/store/user";
+import { Redirect, router } from "expo-router";
 import { useState } from "react";
 import { z } from "zod";
 
@@ -53,6 +57,7 @@ export default function SignUpScreen() {
   }>({});
   const [authError, setAuthError] = useState<string>("");
   const toast = useToast();
+  const { start, stop, loading } = useLoading();
 
   const handleSubmit = async () => {
     const result = registrationSchema.safeParse({
@@ -76,11 +81,14 @@ export default function SignUpScreen() {
     }
 
     try {
+      start();
+
       const user = await createUser({
-        first_name: firstName,
-        last_name: lastName,
+        firstName,
+        lastName,
         email,
         password,
+        role: "user",
       });
 
       if (!user) {
@@ -101,9 +109,12 @@ export default function SignUpScreen() {
           },
         });
       }
+
+      router.push("/")
+      stop();
     } catch (error) {
       setAuthError("An error occurred during registration.");
-      console.error(error);
+      stop();
     }
   };
 
@@ -118,12 +129,17 @@ export default function SignUpScreen() {
           <AlertText>{authError}</AlertText>
         </Alert>
       )}
-      <VStack className="mt-5">
-        <FormControl isInvalid={!!errors.firstName} size="md" isRequired>
+      <VStack className="mt-5" space="md">
+        <FormControl
+          isInvalid={!!errors.firstName}
+          size="md"
+          isRequired
+          isDisabled={loading}
+        >
           <FormControlLabel>
             <FormControlLabelText>First Name</FormControlLabelText>
           </FormControlLabel>
-          <Input className="my-1" size={"lg"}>
+          <Input className="my-1" size={"xl"}>
             <InputField
               placeholder="John"
               value={firstName}
@@ -137,11 +153,16 @@ export default function SignUpScreen() {
           )}
         </FormControl>
 
-        <FormControl isInvalid={!!errors.lastName} size="md" isRequired>
+        <FormControl
+          isInvalid={!!errors.lastName}
+          size="md"
+          isRequired
+          isDisabled={loading}
+        >
           <FormControlLabel>
             <FormControlLabelText>Last Name</FormControlLabelText>
           </FormControlLabel>
-          <Input className="my-1" size={"lg"}>
+          <Input className="my-1" size={"xl"}>
             <InputField
               placeholder="Doe"
               value={lastName}
@@ -155,11 +176,16 @@ export default function SignUpScreen() {
           )}
         </FormControl>
 
-        <FormControl isInvalid={!!errors.email} size="md" isRequired>
+        <FormControl
+          isInvalid={!!errors.email}
+          size="md"
+          isRequired
+          isDisabled={loading}
+        >
           <FormControlLabel>
             <FormControlLabelText>Email</FormControlLabelText>
           </FormControlLabel>
-          <Input className="my-1" size={"lg"}>
+          <Input className="my-1" size={"xl"}>
             <InputField
               placeholder="email@example.com"
               value={email}
@@ -173,11 +199,16 @@ export default function SignUpScreen() {
           )}
         </FormControl>
 
-        <FormControl isInvalid={!!errors.password} size="md" isRequired>
+        <FormControl
+          isInvalid={!!errors.password}
+          size="md"
+          isRequired
+          isDisabled={loading}
+        >
           <FormControlLabel>
             <FormControlLabelText>Password</FormControlLabelText>
           </FormControlLabel>
-          <Input className="my-1" size={"lg"}>
+          <Input className="my-1" size={"xl"}>
             <InputField
               type="password"
               placeholder="password"
@@ -192,11 +223,16 @@ export default function SignUpScreen() {
           )}
         </FormControl>
 
-        <FormControl isInvalid={!!errors.confirmPassword} size="md" isRequired>
+        <FormControl
+          isInvalid={!!errors.confirmPassword}
+          size="md"
+          isRequired
+          isDisabled={loading}
+        >
           <FormControlLabel>
             <FormControlLabelText>Confirm Password</FormControlLabelText>
           </FormControlLabel>
-          <Input className="my-1" size={"lg"}>
+          <Input className="my-1" size={"xl"}>
             <InputField
               type="password"
               placeholder="confirm password"
@@ -213,8 +249,22 @@ export default function SignUpScreen() {
           )}
         </FormControl>
 
-        <Button className="mt-4" size="lg" onPress={handleSubmit}>
-          <ButtonText>Sign up</ButtonText>
+        <Button
+          className="mt-4"
+          size="xl"
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? (
+            <Box className="flex flex-row items-center">
+              <ButtonSpinner color={"gray"} />
+              <ButtonText className="font-medium text-sm ml-2">
+                Please wait...
+              </ButtonText>
+            </Box>
+          ) : (
+            <ButtonText>Sign in</ButtonText>
+          )}
         </Button>
       </VStack>
     </CardContainer>

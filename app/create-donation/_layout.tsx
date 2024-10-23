@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-export default function SignInLayout() {
+export default function CreateDonationLayout() {
   return (
     <Stack
       screenOptions={{

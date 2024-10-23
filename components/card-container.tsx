@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
-import { Card } from "../ui/card";
-import { Heading } from "../ui/heading";
-import { Text } from "../ui/text";
+import { Card } from "./ui/card";
+import { Heading } from "./ui/heading";
+import { Text } from "./ui/text";
 
 interface CardContainerProps {
   children: ReactNode;
@@ -16,10 +16,10 @@ export default function CardContainer({
 }: CardContainerProps) {
   return (
     <Card size="md" variant="elevated" className="m-3 p-5">
-      <Heading size="xl" className="mb-1">
+      <Heading size="2xl" className="mb-1">
         {title}
       </Heading>
-      <Text size="lg">{description}</Text>
+      <Text size="xl">{description}</Text>
       {children}
     </Card>
   );

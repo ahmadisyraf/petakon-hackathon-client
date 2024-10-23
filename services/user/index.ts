@@ -1,5 +1,7 @@
 import axios from "axios";
 
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
 type AuthenticateUser = {
   email: string;
   password: string;
@@ -10,7 +12,7 @@ export const authenticateUser = async ({
   password,
 }: AuthenticateUser): Promise<{ accessToken: string }> => {
   try {
-    const response = await axios.post("http://localhost:3000/auth", {
+    const response = await axios.post(`${apiUrl}/auth`, {
       email,
       password,
     });
@@ -22,23 +24,26 @@ export const authenticateUser = async ({
 };
 
 type CreateUser = {
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
+  role: "user" | "organization" | undefined;
 };
 
 export const createUser = async ({
-  first_name,
-  last_name,
+  firstName,
+  lastName,
   email,
   password,
+  role,
 }: CreateUser) => {
-  const response = await axios.post("http://localhost:3000/users", {
-    first_name,
-    last_name,
+  const response = await axios.post(`${apiUrl}/users`, {
+    firstName,
+    lastName,
     email,
     password,
+    role,
   });
 
   return response.data;

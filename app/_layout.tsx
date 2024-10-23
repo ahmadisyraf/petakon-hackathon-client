@@ -6,17 +6,18 @@ import {
 import "@/global.css";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { useSessionStore } from "@/store/user";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+export default function AppLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
@@ -36,9 +37,29 @@ export default function RootLayout() {
     <GluestackUIProvider mode="light">
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack>
-          <Stack.Screen name="index" options={{ headerTitle: "Login" }} />
-          <Stack.Screen name="sign-up" options={{ headerTitle: "Sign up" }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="index"
+            options={{ headerShown: false, headerTitle: "Back" }}
+          />
+          <Stack.Screen
+            name="authentication"
+            options={{ headerShown: false, title: "Back" }}
+          />
+          <Stack.Screen
+            name="create-donation"
+            options={{ headerTitle: "Create donation" }}
+          />
+          <Stack.Screen
+            name="(tabs)"
+            options={{ headerShown: false, headerTitle: "Back" }}
+          />
+          <Stack.Screen
+            name="organization"
+            options={{
+              headerShown: true,
+              headerTitle: "",
+            }}
+          />
           <Stack.Screen name="+not-found" />
         </Stack>
       </ThemeProvider>
