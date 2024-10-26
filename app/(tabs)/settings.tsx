@@ -27,6 +27,13 @@ export default function AccountScreen() {
       <Button
         variant="solid"
         size="xl"
+        onPress={() => router.navigate("/organization")}
+      >
+        <ButtonText>Organization</ButtonText>
+      </Button>
+      <Button
+        variant="solid"
+        size="xl"
         onPress={() => {
           clearAccessToken();
           router.navigate("/authentication")

@@ -8,23 +8,32 @@ import {
   FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
+import { joinOrganization } from "@/services/organization";
 import { VStack } from "@/components/ui/vstack";
 import useLoading from "@/hooks/useLoading";
 import { useState } from "react";
+import {
+  Toast,
+  ToastDescription,
+  ToastTitle,
+  useToast,
+} from "@/components/ui/toast";
+import { useSessionStore } from "@/store/user";
+import { router } from "expo-router";
 import { z } from "zod";
 
 const organizationSchema = z.object({
-  memberKey: z
-    .string()
-    .min(1, { message: "Member key is required" }),
+  memberKey: z.string().min(1, { message: "Member key is required" }),
 });
 
 export default function JoinOrganizationScreen() {
   const [memberKey, setMemberKey] = useState<string>("");
   const [errors, setErrors] = useState<{ organizationName?: string }>({});
   const { start, stop, loading } = useLoading();
+  const toast = useToast();
+  const { accessToken } = useSessionStore();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const result = organizationSchema.safeParse({ memberKey });
 
     if (!result.success) {
@@ -38,11 +47,41 @@ export default function JoinOrganizationScreen() {
     setErrors({});
     start();
 
-    // Simulate async operation
-    setTimeout(() => {
-      stop();
-      // Handle success or failure accordingly
-    }, 2000);
+    const joinedOrganization = await joinOrganization({
+      memberKey,
+      accessToken,
+    });
+
+    if (!joinedOrganization) {
+      toast.show({
+        placement: "top",
+        duration: 3000,
+        render: ({ id }) => {
+          return (
+            <Toast action="error" variant="solid">
+              <ToastTitle>Opps! something went wrong</ToastTitle>
+              <ToastDescription>Please try again later</ToastDescription>
+            </Toast>
+          );
+        },
+      });
+    } else {
+      toast.show({
+        placement: "top",
+        duration: 3000,
+        render: ({ id }) => {
+          return (
+            <Toast action="success" variant="solid">
+              <ToastTitle>Organization joined successfuly</ToastTitle>
+            </Toast>
+          );
+        },
+      });
+    }
+
+    router.navigate("/(tabs)");
+
+    stop();
   };
 
   return (

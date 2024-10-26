@@ -25,3 +25,27 @@ export const createOrganization = async ({
 
   return createdOrganization;
 };
+
+type joinOrganization = {
+  memberKey: string;
+  accessToken: string;
+};
+
+export const joinOrganization = async ({
+  memberKey,
+  accessToken,
+}: joinOrganization) => {
+  const joinedOrganization = await axios.patch(
+    `${apiUrl}/organization/join`,
+    {
+      memberKey,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  return joinedOrganization;
+};
