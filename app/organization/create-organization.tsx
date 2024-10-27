@@ -53,6 +53,7 @@ export default function CreateOrganizationScreen() {
       organizationName,
       accessToken,
     });
+    // const data = createdOrganization.json();
 
     if (!createdOrganization) {
       toast.show({
@@ -84,12 +85,11 @@ export default function CreateOrganizationScreen() {
       });
     }
 
-    router.navigate("/(tabs)")
+    router.navigate("/(tabs)");
 
     stop();
   };
 
-  console.log(accessToken);
   return (
     <CardContainer
       title="Create an organization"

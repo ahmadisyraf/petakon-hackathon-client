@@ -13,7 +13,6 @@ import {
 import { VStack } from "@/components/ui/vstack";
 import { Input, InputField } from "@/components/ui/input";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
-import { Badge, BadgeIcon, BadgeText } from "@/components/ui/badge";
 import { HStack } from "@/components/ui/hstack";
 import { Pressable } from "@/components/ui/pressable";
 import { ScrollView, View, SafeAreaView } from "react-native";
@@ -25,19 +24,20 @@ import {
   ToastTitle,
   useToast,
 } from "@/components/ui/toast";
+import { createDonation } from "@/services/donation";
 import { z } from "zod";
 import { router } from "expo-router";
 
 const donationSchema = z.object({
-  donationTitle: z.string().min(1, { message: "Donation title is required" }),
-  donationDesc: z
+  title: z.string().min(1, { message: "Donation title is required" }),
+  description: z
     .string()
     .min(10, { message: "Donation description is required" }),
-  donationType: z.string().min(1, { message: "Please choose a donation type" }),
+  foodType: z.string().min(1, { message: "Please choose a donation type" }),
   donationSize: z
     .string()
     .min(1, { message: "Please enter your donation size" }),
-  donationMethod: z
+  transportationMethod: z
     .string()
     .min(1, { message: "Please choose a transportation method" }),
 });
@@ -45,17 +45,17 @@ const donationSchema = z.object({
 export default function CreateDonationScreen() {
   const [selectedType, setSelectedType] = useState<number>();
   const [selectedMethod, setSelectedMethod] = useState<number>();
-  const [donationTitle, setDonationTitle] = useState<string>("");
-  const [donationDesc, setDonationDesc] = useState<string>("");
-  const [donationType, setDonationType] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [foodType, setFoodType] = useState<string>("");
   const [donationSize, setDonationSize] = useState<string>("");
-  const [donationMethod, setDonationMethod] = useState<string>("");
+  const [transportationMethod, setTransportationMethod] = useState<string>("");
   const [errors, setErrors] = useState<{
-    donationTitle?: string;
-    donationDesc?: string;
-    donationType?: string;
+    title?: string;
+    description?: string;
+    foodType?: string;
     donationSize?: string;
-    donationMethod?: string;
+    transportationMethod?: string;
   }>({});
   const { start, stop, loading } = useLoading();
   const { accessToken } = useSessionStore();
@@ -72,32 +72,67 @@ export default function CreateDonationScreen() {
     "Compost",
     "Perishable",
   ];
-  const donationMethodData = ["Pickup", "Delivery"];
+  const donationMethodData = ["request_for_pickup", "deliver_to_organization"];
   const toast = useToast();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const result = donationSchema.safeParse({
-      donationTitle,
-      donationDesc,
-      donationType,
+      title,
+      description,
+      foodType,
       donationSize,
-      donationMethod,
+      transportationMethod,
     });
 
     if (!result.success) {
       const errorMessages = result.error.flatten().fieldErrors;
       setErrors({
-        donationTitle: errorMessages.donationTitle?.[0],
-        donationDesc: errorMessages.donationDesc?.[0],
-        donationType: errorMessages.donationType?.[0],
+        title: errorMessages.title?.[0],
+        description: errorMessages.description?.[0],
+        foodType: errorMessages.foodType?.[0],
         donationSize: errorMessages.donationSize?.[0],
-        donationMethod: errorMessages.donationMethod?.[0],
+        transportationMethod: errorMessages.transportationMethod?.[0],
       });
       return;
     }
-    console.log(result);
     setErrors({});
     start();
+
+    const createdDonation = await createDonation({
+      title,
+      description,
+      foodType,
+      donationSize,
+      transportationMethod,
+      accessToken,
+    });
+
+    if (!createdDonation) {
+      toast.show({
+        placement: "top",
+        duration: 3000,
+        render: ({ id }) => {
+          return (
+            <Toast action="error" variant="solid">
+              <ToastTitle>Opps! something went wrong</ToastTitle>
+              <ToastDescription>Please try again later</ToastDescription>
+            </Toast>
+          );
+        },
+      });
+    } else {
+      toast.show({
+        placement: "top",
+        duration: 3000,
+        render: ({ id }) => {
+          return (
+            <Toast action="success" variant="solid">
+              <ToastTitle>Donation created successfuly</ToastTitle>
+            </Toast>
+          );
+        },
+      });
+    }
     router.navigate("/(tabs)");
     stop();
   };
@@ -105,7 +140,7 @@ export default function CreateDonationScreen() {
   return (
     <SafeAreaView>
       <ScrollView>
-        <View className="mb-20">
+        <View className="mb-24">
           <CardContainer
             title="Create Donation Form"
             description="Please fill in the details below"
@@ -114,7 +149,7 @@ export default function CreateDonationScreen() {
               size="md"
               isRequired
               className="mt-10"
-              isInvalid={!!errors.donationTitle}
+              isInvalid={!!errors.title}
               isDisabled={loading}
             >
               <FormControlLabel>
@@ -123,8 +158,8 @@ export default function CreateDonationScreen() {
               <Input className="mt-5" size={"xl"}>
                 <InputField
                   placeholder="Donation title"
-                  value={donationTitle}
-                  onChange={(e: any) => setDonationTitle(e.nativeEvent.text)}
+                  value={title}
+                  onChange={(e: any) => setTitle(e.nativeEvent.text)}
                 />
               </Input>
             </FormControl>
@@ -132,14 +167,14 @@ export default function CreateDonationScreen() {
               size="md"
               isRequired
               className="mt-5"
-              isInvalid={!!errors.donationDesc}
+              isInvalid={!!errors.description}
               isDisabled={loading}
             >
               <Textarea className="my-1" size={"xl"}>
                 <TextareaInput
                   placeholder="Add a description"
-                  value={donationDesc}
-                  onChange={(e: any) => setDonationDesc(e.nativeEvent.text)}
+                  value={description}
+                  onChange={(e: any) => setDescription(e.nativeEvent.text)}
                 />
               </Textarea>
             </FormControl>
@@ -147,7 +182,7 @@ export default function CreateDonationScreen() {
               size="md"
               isRequired
               className="mt-10"
-              isInvalid={!!errors.donationType}
+              isInvalid={!!errors.foodType}
               isDisabled={loading}
             >
               <FormControlLabel>
@@ -157,9 +192,9 @@ export default function CreateDonationScreen() {
                 {donationTypeData.map((d, i) => (
                   <Pressable
                     onPress={(e: any) => {
-                      setDonationType(d);
+                      setFoodType(d);
                       setSelectedType(i);
-                      console.log(donationType);
+                      console.log(foodType);
                     }}
                     className={
                       selectedType === i
@@ -199,7 +234,13 @@ export default function CreateDonationScreen() {
                 />
               </Input>
             </FormControl>
-            <FormControl size="md" isRequired className="mt-10">
+            <FormControl
+              size="md"
+              isRequired
+              className="mt-10"
+              isInvalid={!!errors.transportationMethod}
+              isDisabled={loading}
+            >
               <FormControlLabel>
                 <FormControlLabelText>
                   Transportation Method
@@ -209,9 +250,9 @@ export default function CreateDonationScreen() {
                 {donationMethodData.map((d, i) => (
                   <Pressable
                     onPress={(e: any) => {
-                      setDonationMethod(d);
+                      setTransportationMethod(d);
                       setSelectedMethod(i);
-                      console.log(donationMethod);
+                      console.log(transportationMethod);
                     }}
                     className={
                       selectedMethod === i
@@ -227,7 +268,9 @@ export default function CreateDonationScreen() {
                           : "text-black"
                       }
                     >
-                      {d === "Delivery" ? "I will deliver" : "Request pickup"}
+                      {d === "deliver_to_organization"
+                        ? "I will deliver"
+                        : "Request pickup"}
                     </Text>
                   </Pressable>
                 ))}
@@ -236,7 +279,7 @@ export default function CreateDonationScreen() {
           </CardContainer>
         </View>
       </ScrollView>
-      <View className="absolute bottom-0 left-0 right-0 bg-gray-100 p-4 border-t border-gray-300">
+      <View className="absolute bottom-0 left-0 right-0 bg-gray-100 p-6 border-t border-gray-300">
         <HStack space="md" className="w-full">
           <Button
             size="xl"
@@ -254,7 +297,9 @@ export default function CreateDonationScreen() {
             onPress={handleSubmit}
             disabled={loading}
           >
-            <ButtonText>Post</ButtonText>
+            <ButtonText>
+              {loading ? "Posting" : "Post"}
+            </ButtonText>
           </Button>
         </HStack>
       </View>
