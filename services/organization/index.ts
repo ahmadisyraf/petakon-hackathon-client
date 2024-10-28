@@ -49,3 +49,13 @@ export const joinOrganization = async ({
 
   return joinedOrganization;
 };
+
+export const getOrgById = async (accessToken: string) => {
+  const getOrg = await axios.get(`${apiUrl}/organization`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return getOrg;
+};
