@@ -50,7 +50,7 @@ export const createUser = async ({
 };
 
 export const getUserById = async (accessToken: string) => {
-  const getUser = await axios.get(`${apiUrl}/users`, {
+  const getUser = await axios.get(`${apiUrl}/users/current-user`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
