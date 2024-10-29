@@ -49,12 +49,13 @@ export const createUser = async ({
   return response.data;
 };
 
-export const getUserById = async (accessToken: string) => {
-  const getUser = await axios.get(`${apiUrl}/users/current-user`, {
+
+export const getCurrentUser = async (accessToken: string) => {
+  const user = await axios.get(`${apiUrl}/users/current-user`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
 
-  return getUser;
+  return user.data;
 };
