@@ -15,11 +15,11 @@ export default function CardContainer({
   description,
 }: CardContainerProps) {
   return (
-    <Card size="md" variant="elevated" className="m-3 p-5">
-      <Heading size="2xl" className="mb-1">
+    <Card size="md" variant="elevated" className="m-3 p-6">
+      <Heading size="xl" className="mb-1">
         {title}
       </Heading>
-      <Text size="xl">{description}</Text>
+      <Text size="md">{description}</Text>
       {children}
     </Card>
   );

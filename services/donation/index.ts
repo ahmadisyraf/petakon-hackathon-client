@@ -13,10 +13,7 @@ const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 //   accessToken: string;
 // };
 
-export const getDonationStatus = async ({
-  accessToken,
-  status,
-}: any) => {
+export const getDonationStatus = async ({ accessToken, status }: any) => {
   const getDonation = await axios.get(`${apiUrl}/donation`, {
     params: {
       status,
@@ -63,4 +60,36 @@ export const createDonation = async ({
   );
 
   return createdDonation;
+};
+
+enum DonationStatusEnum {
+  pending = "pending",
+  completed = "completed",
+  reserved = "reserved",
+}
+
+type UpdateDonation = {
+  accessToken: string;
+  status: any;
+  id: string;
+};
+
+export const updateDonation = async ({
+  accessToken,
+  status,
+  id,
+}: UpdateDonation) => {
+  const updatedDonation = await axios.patch(
+    `${apiUrl}/donation/${id}`,
+    {
+      status,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  return updatedDonation;
 };
