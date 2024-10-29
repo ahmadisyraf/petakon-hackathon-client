@@ -108,47 +108,24 @@ export default function HomeScreen() {
               <Text className="text-sm">Food Type</Text>
               <Text className="font-semibold text-xl">{d.foodType}</Text>
             </Box>
-            <HStack className="flex justify-between mt-5 items-center">
-              <Text className="text-sm">
+            <Box className="mt-5">
+              <Text>
                 {new Date(d.createdAt).toLocaleDateString("en-US", {
                   day: "numeric",
                   month: "short",
                   year: "numeric",
                 })}
               </Text>
-
-              <Select>
-                <SelectTrigger variant="rounded" size="sm">
-                  <SelectInput placeholder="Pending" />
-                  <SelectIcon className="mr-3" as={ChevronDownIcon} />
-                </SelectTrigger>
-                <SelectPortal>
-                  <SelectBackdrop />
-                  <SelectContent>
-                    <SelectDragIndicatorWrapper>
-                      <SelectDragIndicator />
-                    </SelectDragIndicatorWrapper>
-                    <SelectItem label="Pending" value="pending" />
-                    <SelectItem
-                      label="Reserved"
-                      value="reserved"
-                      onPress={() => {
-                        setShowModal(true);
-                        setSelectedStatus(DonationStatusEnum.reserved);
-                      }}
-                    />
-                    <SelectItem
-                      label="Completed"
-                      value="completed"
-                      onPress={() => {
-                        setShowModal(true);
-                        setSelectedStatus(DonationStatusEnum.completed);
-                      }}
-                    />
-                  </SelectContent>
-                </SelectPortal>
-              </Select>
-            </HStack>
+            </Box>
+            <Button
+              onPress={() => {
+                setSelectedStatus(DonationStatusEnum.reserved);
+                setShowModal(true);
+              }}
+              className="mt-5"
+            >
+              <ButtonText>Reserved</ButtonText>
+            </Button>
             <Modal
               isOpen={showModal}
               onClose={() => {
