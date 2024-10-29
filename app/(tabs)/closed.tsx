@@ -81,11 +81,6 @@ export default function HomeScreen() {
       console.log(selectedStatus);
       try {
         await updateDonation({
-          // title: donationPending[i]?.title,
-          // description: donationPending[i]?.description,
-          // foodType: donationPending[i]?.foodType,
-          // donationSize: donationPending[i]?.donationSize,
-          // transportationMethod: donationPending[i]?.transportationMethod,
           accessToken,
           status: selectedStatus,
           id: did,
@@ -125,7 +120,7 @@ export default function HomeScreen() {
               <Text className="text-sm">Food Type</Text>
               <Text className="font-semibold text-xl">{d.foodType}</Text>
             </Box>
-            <HStack className="flex justify-between mt-5 items-center">
+            <Box className="mt-5">
               <Text className="text-sm">
                 {new Date(d.createdAt).toLocaleDateString("en-US", {
                   day: "numeric",
@@ -133,82 +128,7 @@ export default function HomeScreen() {
                   year: "numeric",
                 })}
               </Text>
-
-              <Select
-              // selectedValue={selectedStatus}
-              // onValueChange={(value) => setSelectedStatus(value)}
-              >
-                <SelectTrigger variant="rounded" size="sm">
-                  <SelectInput placeholder="Completed" />
-                  <SelectIcon className="mr-3" as={ChevronDownIcon} />
-                </SelectTrigger>
-                <SelectPortal>
-                  <SelectBackdrop />
-                  <SelectContent>
-                    <SelectDragIndicatorWrapper>
-                      <SelectDragIndicator />
-                    </SelectDragIndicatorWrapper>
-                    <SelectItem
-                      label="Pending"
-                      value="pending"
-                      onPress={() => {
-                        setShowModal(true);
-                        setSelectedStatus(DonationStatusEnum.pending);
-                      }}
-                    />
-                    <SelectItem
-                      label="Reserved"
-                      value="reserved"
-                      onPress={() => {
-                        setShowModal(true);
-                        setSelectedStatus(DonationStatusEnum.reserved);
-                      }}
-                    />
-                    <SelectItem label="Completed" value="completed" />
-                  </SelectContent>
-                </SelectPortal>
-              </Select>
-            </HStack>
-            <Modal
-              isOpen={showModal}
-              onClose={() => {
-                setShowModal(false);
-              }}
-              size="md"
-            >
-              <ModalBackdrop />
-              <ModalContent>
-                <ModalHeader>
-                  <Heading size="md" className="text-typography-950">
-                    Are you sure?
-                  </Heading>
-                </ModalHeader>
-                <ModalBody>
-                  <Text className="text-typography-500">
-                    The status of the donation will be changed by clicking the
-                    confirm button.
-                  </Text>
-                </ModalBody>
-                <ModalFooter>
-                  <Button
-                    variant="outline"
-                    action="secondary"
-                    onPress={() => {
-                      setShowModal(false);
-                    }}
-                  >
-                    <ButtonText>Cancel</ButtonText>
-                  </Button>
-                  <Button
-                    onPress={() => {
-                      handleSubmit(i, d.id); // Call handleSubmit on confirmation
-                    }}
-                  >
-                    <ButtonText>Confirm</ButtonText>
-                  </Button>
-                </ModalFooter>
-              </ModalContent>
-            </Modal>
+            </Box>
           </CardContainer>
         ))}
       </ScrollView>
