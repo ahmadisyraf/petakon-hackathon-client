@@ -29,6 +29,7 @@
     "@gluestack-ui/nativewind-utils": "^1.0.25",
     "@gluestack-ui/overlay": "^0.1.15",
     "@gluestack-ui/pressable": "^0.1.16",
+    "@gluestack-ui/spinner": "^0.1.14",
     "@gluestack-ui/select": "^0.1.29",
     "@gluestack-ui/textarea": "^0.1.23",
     "@gluestack-ui/toast": "^1.0.7",

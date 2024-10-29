@@ -26,8 +26,6 @@ interface User {
 export default function AccountScreen() {
   const { clearAccessToken, role, clearRole } = useSessionStore();
 
-  console.log(role, "...user role");
-
   return (
     <VStack space="lg" className="px-5 py-10">
       <Button variant="solid" size="xl">
