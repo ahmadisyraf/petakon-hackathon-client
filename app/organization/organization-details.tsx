@@ -38,10 +38,10 @@ export default function OrganizationDetailsScreen() {
 
   return (
     <CardContainer
-      title={`${orgData?.organizationName}`}
-      description={`${orgData?.memberKey}`}
+      title={`You're ${orgData?.organizationName} member`}
+      description={`Share your member key: ${orgData?.memberKey}`}
     >
-      <Text>testing</Text>
+      <Text>Thank you</Text>
     </CardContainer>
   );
 }
