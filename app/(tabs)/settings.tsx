@@ -1,9 +1,9 @@
 import { Button, ButtonText } from "@/components/ui/button";
 import { VStack } from "@/components/ui/vstack";
 import { useSessionStore } from "@/store/user";
-import { getUserById } from "@/services/user";
 import { router } from "expo-router";
-import { useState, useEffect } from "react";
+import { Box } from "@/components/ui/box";
+import React from "react";
 
 interface User {
   createdAt: string;
@@ -24,28 +24,16 @@ interface User {
 }
 
 export default function AccountScreen() {
-  const { clearAccessToken, accessToken } = useSessionStore();
-  const [userData, setUserData] = useState<User>();
+  const { clearAccessToken, role, clearRole } = useSessionStore();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const getUser = await getUserById(accessToken);
-        setUserData(getUser.data);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-
-    fetchUser();
-  }, [accessToken]);
+  console.log(role, "...user role");
 
   return (
     <VStack space="lg" className="px-5 py-10">
       <Button variant="solid" size="xl">
         <ButtonText>Account</ButtonText>
       </Button>
-      {userData?.organization ? (
+      {role === "organization" ? (
         <Button
           variant="solid"
           size="xl"
@@ -54,7 +42,7 @@ export default function AccountScreen() {
           <ButtonText>Organization</ButtonText>
         </Button>
       ) : (
-        <>
+        <React.Fragment>
           <Button
             variant="solid"
             size="xl"
@@ -69,13 +57,14 @@ export default function AccountScreen() {
           >
             <ButtonText>Join organization</ButtonText>
           </Button>
-        </>
+        </React.Fragment>
       )}
       <Button
         variant="solid"
         size="xl"
         onPress={() => {
           clearAccessToken();
+          clearRole();
           router.navigate("/authentication");
         }}
       >

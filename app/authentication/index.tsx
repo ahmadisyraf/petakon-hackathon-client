@@ -15,7 +15,7 @@ import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import useLoading from "@/hooks/useLoading";
-import { authenticateUser } from "@/services/user";
+import { authenticateUser, getCurrentUser } from "@/services/user";
 import { useSessionStore } from "@/store/user";
 import { Link, Redirect, router } from "expo-router";
 import { useState } from "react";
@@ -37,7 +37,7 @@ export default function SignInScreen() {
   const [authError, setAuthError] = useState<string>("");
   const [open, setOpen] = useState<boolean>(true);
   const { start, stop, loading } = useLoading();
-  const { setAccessToken } = useSessionStore();
+  const { setAccessToken, setRole } = useSessionStore();
 
   const handleSubmit = async () => {
     const result = loginSchema.safeParse({ email, password });
@@ -55,6 +55,7 @@ export default function SignInScreen() {
     start();
 
     const session = await authenticateUser({ email, password });
+    const user = await getCurrentUser(session.accessToken);
 
     if (session.accessToken === "") {
       setAuthError("Incorrect email or password");
@@ -62,11 +63,13 @@ export default function SignInScreen() {
 
     if (session.accessToken) {
       setAccessToken(session.accessToken);
+      setRole(user.role);
       router.push("/(tabs)");
     }
 
     stop();
   };
+  
 
   return (
     <Box>

@@ -32,7 +32,7 @@ export default function CreateOrganizationScreen() {
   const [organizationName, setOrganizationName] = useState<string>("");
   const [errors, setErrors] = useState<{ organizationName?: string }>({});
   const { start, stop, loading } = useLoading();
-  const { accessToken } = useSessionStore();
+  const { accessToken, setRole } = useSessionStore();
   const toast = useToast();
 
   const handleSubmit = async () => {
@@ -83,6 +83,7 @@ export default function CreateOrganizationScreen() {
           );
         },
       });
+      setRole("organization");
     }
 
     router.navigate("/(tabs)");
