@@ -1,29 +1,35 @@
 import axios from "axios";
+import useSWR from "swr";
 
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
-// enum DonationStatusEnum {
-//   pending = "pending",
-//   completed = "completed",
-//   reserved = "reserved",
-// }
-
-// type DonationStatus = {
-//   status: DonationStatusEnum;
-//   accessToken: string;
-// };
-
-export const getDonationStatus = async ({ accessToken, status }: any) => {
-  const getDonation = await axios.get(`${apiUrl}/donation`, {
-    params: {
-      status,
-    },
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
+export const getDonationStatus = ({
+  accessToken,
+  status,
+}: {
+  accessToken: string;
+  status: "pending" | "reserved" | "completed";
+}) => {
+  const fetcher = (url: string) =>
+    axios
+      .get(url, {
+        params: {
+          status,
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+      .then((res) => res.data);
+  const { data, isLoading, error } = useSWR(`${apiUrl}/donation`, fetcher, {
+    refreshInterval: 1000,
   });
 
-  return getDonation;
+  return {
+    data,
+    loading: isLoading,
+    error,
+  };
 };
 
 type Donation = {

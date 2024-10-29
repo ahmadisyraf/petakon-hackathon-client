@@ -1,16 +1,12 @@
 import CreateDonationButton from "@/components/create-donation-button";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSessionStore } from "@/store/user";
 import { getDonationStatus } from "@/services/donation";
 import CardContainer from "@/components/card-container";
-import { ScrollView, View, Text } from "react-native";
-import { Scroll } from "lucide-react-native";
+import { ScrollView, Text } from "react-native";
 import { HStack } from "@/components/ui/hstack";
-import { VStack } from "@/components/ui/vstack";
-import { Divider } from "@/components/ui/divider";
-import { Badge, BadgeText, BadgeIcon } from "@/components/ui/badge";
 import {
   Select,
   SelectTrigger,
@@ -23,19 +19,18 @@ import {
   SelectDragIndicator,
   SelectItem,
 } from "@/components/ui/select";
-import { ChevronDownIcon, PanelTopCloseIcon } from "lucide-react-native";
+import { ChevronDownIcon } from "lucide-react-native";
 import {
   Modal,
   ModalBackdrop,
   ModalContent,
   ModalHeader,
-  ModalCloseButton,
   ModalBody,
   ModalFooter,
 } from "@/components/ui/modal";
-import { Icon } from "@/components/ui/icon";
 import { Heading } from "@/components/ui/heading";
 import { updateDonation } from "@/services/donation";
+import Loading from "@/components/loading";
 
 enum DonationStatusEnum {
   pending = "pending",
@@ -55,53 +50,41 @@ interface Donation {
 }
 
 export default function HomeScreen() {
-  const [donationPending, setDonationPending] = useState<Donation[]>();
   const { accessToken } = useSessionStore();
   const [selectedStatus, setSelectedStatus] = useState<any>(
     DonationStatusEnum.pending
   );
   const [showModal, setShowModal] = useState<boolean>(false);
-
-  useEffect(() => {
-    const fetchDonation = async () => {
-      try {
-        const status = DonationStatusEnum.pending;
-        const donation = await getDonationStatus({ accessToken, status });
-        setDonationPending(donation.data);
-      } catch (error) {
-        console.error("Error fetching donation:", error);
-      }
-    };
-
-    fetchDonation();
-  }, [showModal]);
+  const { data, loading, error } = getDonationStatus({
+    accessToken,
+    status: "pending",
+  });
 
   const handleSubmit = async (i: number, did: string) => {
-    if (donationPending) {
-      console.log(selectedStatus);
-      try {
-        await updateDonation({
-          // title: donationPending[i]?.title,
-          // description: donationPending[i]?.description,
-          // foodType: donationPending[i]?.foodType,
-          // donationSize: donationPending[i]?.donationSize,
-          // transportationMethod: donationPending[i]?.transportationMethod,
-          accessToken,
-          status: selectedStatus,
-          id: did,
-        });
-        console.log("jadi");
-      } catch (error) {
-        console.error("Error updating status:", error);
-      }
+    try {
+      await updateDonation({
+        accessToken,
+        status: selectedStatus,
+        id: did,
+      });
+    } catch (error) {
+      console.error("Error updating status:", error);
     }
     setShowModal(false);
   };
 
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return <Text>Error...</Text>;
+  }
+
   return (
     <Box className="relative h-full">
       <ScrollView>
-        {donationPending?.map((d, i) => (
+        {data.map((d: any, i: number) => (
           <CardContainer
             title={`${d.title}`}
             description={`${d.description}`}
@@ -134,10 +117,7 @@ export default function HomeScreen() {
                 })}
               </Text>
 
-              <Select
-                // selectedValue={selectedStatus}
-                // onValueChange={(value) => setSelectedStatus(value)}
-              >
+              <Select>
                 <SelectTrigger variant="rounded" size="sm">
                   <SelectInput placeholder="Pending" />
                   <SelectIcon className="mr-3" as={ChevronDownIcon} />
@@ -182,7 +162,6 @@ export default function HomeScreen() {
                   <Heading size="md" className="text-typography-950">
                     Are you sure?
                   </Heading>
-                 
                 </ModalHeader>
                 <ModalBody>
                   <Text className="text-typography-500">
@@ -202,7 +181,7 @@ export default function HomeScreen() {
                   </Button>
                   <Button
                     onPress={() => {
-                      handleSubmit(i, d.id); // Call handleSubmit on confirmation
+                      handleSubmit(i, d.id);
                     }}
                   >
                     <ButtonText>Confirm</ButtonText>
