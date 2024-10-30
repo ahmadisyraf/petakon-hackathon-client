@@ -133,7 +133,7 @@ export default function CreateDonationScreen() {
         },
       });
     }
-    router.navigate("/(tabs)");
+    router.navigate("/(user)");
     stop();
   };
 

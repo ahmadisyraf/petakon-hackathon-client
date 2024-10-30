@@ -1,35 +1,41 @@
 import axios from "axios";
-import useSWR from "swr";
 
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
-export const getDonationStatus = ({
+export const getManyDonation = async ({
   accessToken,
   status,
 }: {
   accessToken: string;
   status: "pending" | "reserved" | "completed";
 }) => {
-  const fetcher = (url: string) =>
-    axios
-      .get(url, {
-        params: {
-          status,
-        },
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-      .then((res) => res.data);
-  const { data, isLoading, error } = useSWR(`${apiUrl}/donation`, fetcher, {
-    refreshInterval: 1000,
+  const getDonation = await axios.get(`${apiUrl}/donation`, {
+    params: {
+      status,
+    },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
   });
+  return getDonation.data;
+};
 
-  return {
-    data,
-    loading: isLoading,
-    error,
-  };
+export const getUserDonation = async ({
+  accessToken,
+  status,
+}: {
+  accessToken: string;
+  status: "pending" | "completed" | "reserved";
+}) => {
+  const getDonation = await axios.get(`${apiUrl}/donation/current-user`, {
+    params: {
+      status,
+    },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  return getDonation.data;
 };
 
 type Donation = {
@@ -68,12 +74,6 @@ export const createDonation = async ({
   return createdDonation;
 };
 
-enum DonationStatusEnum {
-  pending = "pending",
-  completed = "completed",
-  reserved = "reserved",
-}
-
 type UpdateDonation = {
   accessToken: string;
   status: any;
@@ -98,4 +98,62 @@ export const updateDonation = async ({
   );
 
   return updatedDonation;
+};
+type ReserveDonation = {
+  accessToken: string;
+  id: string;
+};
+
+export const reserveDonation = async ({ accessToken, id }: ReserveDonation) => {
+  const reservedDonation = await axios.post(
+    `${apiUrl}/reservation/${id}`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  return reservedDonation.data;
+};
+
+type ReceivedDonation = {
+  accessToken: string;
+  id: string;
+};
+
+export const recieveDonation = async ({
+  accessToken,
+  id,
+}: ReceivedDonation) => {
+  const reservedDonation = await axios.patch(
+    `${apiUrl}/reservation/${id}`,
+    {
+      status: "completed",
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  return reservedDonation.data;
+};
+
+type FindReservation = {
+  accessToken: string;
+};
+
+export const findManyReservation = async ({
+  accessToken,
+}: FindReservation) => {
+  const reservedDonation = await axios.get(`${apiUrl}/reservation`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return reservedDonation.data;
 };

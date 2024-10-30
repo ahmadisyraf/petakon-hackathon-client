@@ -12,7 +12,6 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { useSessionStore } from "@/store/user";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -50,7 +49,11 @@ export default function AppLayout() {
             options={{ headerTitle: "Create donation" }}
           />
           <Stack.Screen
-            name="(tabs)"
+            name="(user)"
+            options={{ headerShown: false, headerTitle: "Back" }}
+          />
+          <Stack.Screen
+            name="(organization)"
             options={{ headerShown: false, headerTitle: "Back" }}
           />
           <Stack.Screen

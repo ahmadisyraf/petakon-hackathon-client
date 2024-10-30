@@ -20,8 +20,7 @@ import {
 import { VStack } from "@/components/ui/vstack";
 import useLoading from "@/hooks/useLoading";
 import { createUser } from "@/services/user";
-import { useSessionStore } from "@/store/user";
-import { Redirect, router } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
 import { z } from "zod";
 
@@ -110,7 +109,7 @@ export default function SignUpScreen() {
         });
       }
 
-      router.push("/")
+      router.push("/authentication");
       stop();
     } catch (error) {
       setAuthError("An error occurred during registration.");

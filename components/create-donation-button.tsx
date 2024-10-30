@@ -5,7 +5,7 @@ import { Link } from "expo-router";
 
 export default function CreateDonationButton() {
   return (
-    <Box className="absolute bottom-2 right-4 z-10">
+    <Box className="absolute bottom-2 right-2 z-10">
       <Link href={"/create-donation"} asChild>
         <Fab
           size="md"

@@ -31,7 +31,7 @@ export default function JoinOrganizationScreen() {
   const [errors, setErrors] = useState<{ organizationName?: string }>({});
   const { start, stop, loading } = useLoading();
   const toast = useToast();
-  const { accessToken } = useSessionStore();
+  const { accessToken, setRole } = useSessionStore();
 
   const handleSubmit = async () => {
     const result = organizationSchema.safeParse({ memberKey });
@@ -65,6 +65,8 @@ export default function JoinOrganizationScreen() {
           );
         },
       });
+
+      router.push("/(user)")
     } else {
       toast.show({
         placement: "top",
@@ -77,9 +79,9 @@ export default function JoinOrganizationScreen() {
           );
         },
       });
+      setRole("organization")
+      router.push("/(organization)")
     }
-
-    router.navigate("/(tabs)");
 
     stop();
   };

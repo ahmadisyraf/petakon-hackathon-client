@@ -1,47 +1,24 @@
-import CreateDonationButton from "@/components/create-donation-button";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useCallback, useState } from "react";
 import { useSessionStore } from "@/store/user";
-import { getDonationStatus } from "@/services/donation";
+import { getManyDonation, reserveDonation } from "@/services/donation";
 import CardContainer from "@/components/card-container";
-import { ScrollView, View, Text } from "react-native";
-import { Scroll } from "lucide-react-native";
+import { RefreshControl, ScrollView, Text } from "react-native";
 import { HStack } from "@/components/ui/hstack";
-import { VStack } from "@/components/ui/vstack";
-import { Divider } from "@/components/ui/divider";
-import { Badge, BadgeText, BadgeIcon } from "@/components/ui/badge";
-import {
-  Select,
-  SelectTrigger,
-  SelectInput,
-  SelectIcon,
-  SelectPortal,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicatorWrapper,
-  SelectDragIndicator,
-  SelectItem,
-} from "@/components/ui/select";
-import { ChevronDownIcon, PanelTopCloseIcon } from "lucide-react-native";
 import {
   Modal,
   ModalBackdrop,
   ModalContent,
   ModalHeader,
-  ModalCloseButton,
   ModalBody,
   ModalFooter,
 } from "@/components/ui/modal";
-import { Icon } from "@/components/ui/icon";
 import { Heading } from "@/components/ui/heading";
 import { updateDonation } from "@/services/donation";
-
-enum DonationStatusEnum {
-  pending = "pending",
-  completed = "completed",
-  reserved = "reserved",
-}
+import Loading from "@/components/loading";
+import useLoading from "@/hooks/useLoading";
+import { Redirect, useFocusEffect } from "expo-router";
 
 interface Donation {
   id: string;
@@ -50,63 +27,82 @@ interface Donation {
   foodType: string;
   donationSize: string;
   transportationMethod: string;
-  status: DonationStatusEnum;
+  status: "pending" | "reserved" | "completed";
   createdAt: any;
 }
 
 export default function HomeScreen() {
-  const [donationPending, setDonationPending] = useState<Donation[]>();
-  const { accessToken } = useSessionStore();
-  const [selectedStatus, setSelectedStatus] = useState<any>(
-    DonationStatusEnum.reserved
-  );
+  const { accessToken, role } = useSessionStore();
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [donation, setDonation] = useState<Donation[]>([]);
+  const [refresh, setRefresh] = useState<boolean>(false);
+  const { start, stop, loading } = useLoading();
 
-  useEffect(() => {
-    const fetchDonation = async () => {
-      try {
-        const status = DonationStatusEnum.reserved;
-        const donation = await getDonationStatus({ accessToken, status });
-        setDonationPending(donation.data);
-      } catch (error) {
-        console.error("Error fetching donation:", error);
-      }
-    };
+  const getDonationFn = async () => {
+    start();
+    const donationList = await getManyDonation({
+      accessToken,
+      status: "pending",
+    });
+    setDonation(donationList);
+    stop();
+  };
 
-    fetchDonation();
-  }, [showModal]);
+  const handleSubmit = async (id: string) => {
 
-  const handleSubmit = async (i: number, did: string) => {
-    if (donationPending) {
-      console.log(selectedStatus);
-      try {
-        await updateDonation({
-          // title: donationPending[i]?.title,
-          // description: donationPending[i]?.description,
-          // foodType: donationPending[i]?.foodType,
-          // donationSize: donationPending[i]?.donationSize,
-          // transportationMethod: donationPending[i]?.transportationMethod,
-          accessToken,
-          status: selectedStatus,
-          id: did,
-        });
-        console.log("jadi");
-      } catch (error) {
-        console.error("Error updating status:", error);
-      }
+    try {
+      await reserveDonation({
+        accessToken,
+        id,
+      });
+      await updateDonation({
+        accessToken,
+        status: "reserved",
+        id,
+      });
+
+      setDonation((prevDonations) =>
+        prevDonations.filter((donation) => donation.id !== id)
+      );
+    } catch (error) {
+      console.error("Error updating status:", error);
     }
     setShowModal(false);
   };
 
+  const onRefresh = async () => {
+    setRefresh(true);
+    await getDonationFn();
+    setRefresh(false);
+  };
+
+  if (!accessToken) {
+    return <Redirect href={"/authentication"} />;
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      getDonationFn();
+    }, [])
+  );
+
+  if (role === "user") {
+    return <Redirect href={"/(user)"} />;
+  }
+
+  if (loading) {
+    return <Loading />;
+  }
+
   return (
     <Box className="relative h-full">
-      <ScrollView>
-        {donationPending?.map((d, i) => (
-          <CardContainer
-            title={`${d.title}`}
-            description={`${d.description}`}
-            key={i}
-          >
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refresh} onRefresh={onRefresh} />
+        }
+      >
+        {donation.map((d, i) => (
+          <CardContainer title={d.title} description={d.description} key={d.id}>
             <HStack className="mt-5 flex justify-between">
               <Box>
                 <Text className="text-sm">Donation Size</Text>
@@ -116,8 +112,8 @@ export default function HomeScreen() {
                 <Text className="text-sm">Transport</Text>
                 <Text className="font-semibold text-xl">
                   {d.transportationMethod === "request_for_pickup"
-                    ? "Receiver will pickup"
-                    : "Organization will deliver"}
+                    ? "Request for pickup"
+                    : "I will deliver"}
                 </Text>
               </Box>
             </HStack>
@@ -136,12 +132,11 @@ export default function HomeScreen() {
             </Box>
             <Button
               onPress={() => {
-                setSelectedStatus(DonationStatusEnum.reserved);
                 setShowModal(true);
               }}
-              className="mt-5"
+              className="mt-5 bg-cyan-500"
             >
-              <ButtonText>Completed</ButtonText>
+              <ButtonText>Reserve</ButtonText>
             </Button>
             <Modal
               isOpen={showModal}
@@ -175,7 +170,7 @@ export default function HomeScreen() {
                   </Button>
                   <Button
                     onPress={() => {
-                      handleSubmit(i, d.id); // Call handleSubmit on confirmation
+                      handleSubmit(d.id);
                     }}
                   >
                     <ButtonText>Confirm</ButtonText>
@@ -186,7 +181,6 @@ export default function HomeScreen() {
           </CardContainer>
         ))}
       </ScrollView>
-      <CreateDonationButton />
     </Box>
   );
 }

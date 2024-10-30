@@ -68,6 +68,7 @@ export default function CreateOrganizationScreen() {
           );
         },
       });
+      router.navigate("/(user)");
     } else {
       toast.show({
         placement: "top",
@@ -83,10 +84,9 @@ export default function CreateOrganizationScreen() {
           );
         },
       });
+      router.navigate("/(organization)");
       setRole("organization");
     }
-
-    router.navigate("/(tabs)");
 
     stop();
   };

@@ -11,7 +11,7 @@ export default function SignedIn({ children }: SignedInProps) {
   const { accessToken } = useSessionStore();
 
   if (accessToken.length > 0) {
-    router.navigate("/(tabs)");
+    router.navigate("/(user)");
   }
   return <Box>{children}</Box>;
 }

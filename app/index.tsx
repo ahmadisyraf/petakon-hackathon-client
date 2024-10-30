@@ -11,7 +11,7 @@ export default function HomeScreen() {
   const { accessToken } = useSessionStore();
 
   if (accessToken && accessToken.length > 0) {
-    return <Redirect href={"/(tabs)"} />;
+    return <Redirect href={"/(user)"} />;
   }
 
   return (

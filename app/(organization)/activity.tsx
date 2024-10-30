@@ -1,25 +1,14 @@
-import CreateDonationButton from "@/components/create-donation-button";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useSessionStore } from "@/store/user";
-import { getDonationStatus } from "@/services/donation";
-import CardContainer from "@/components/card-container";
-import { ScrollView, Text } from "react-native";
-import { HStack } from "@/components/ui/hstack";
 import {
-  Select,
-  SelectTrigger,
-  SelectInput,
-  SelectIcon,
-  SelectPortal,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicatorWrapper,
-  SelectDragIndicator,
-  SelectItem,
-} from "@/components/ui/select";
-import { ChevronDownIcon } from "lucide-react-native";
+  findManyReservation,
+  recieveDonation,
+} from "@/services/donation";
+import CardContainer from "@/components/card-container";
+import { RefreshControl, ScrollView, Text } from "react-native";
+import { HStack } from "@/components/ui/hstack";
 import {
   Modal,
   ModalBackdrop,
@@ -31,12 +20,8 @@ import {
 import { Heading } from "@/components/ui/heading";
 import { updateDonation } from "@/services/donation";
 import Loading from "@/components/loading";
-
-enum DonationStatusEnum {
-  pending = "pending",
-  completed = "completed",
-  reserved = "reserved",
-}
+import useLoading from "@/hooks/useLoading";
+import { useFocusEffect } from "expo-router";
 
 interface Donation {
   id: string;
@@ -45,72 +30,108 @@ interface Donation {
   foodType: string;
   donationSize: string;
   transportationMethod: string;
-  status: DonationStatusEnum;
+  status: "pending" | "reserved" | "completed";
   createdAt: any;
 }
 
 export default function HomeScreen() {
-  const { accessToken } = useSessionStore();
-  const [selectedStatus, setSelectedStatus] = useState<any>(
-    DonationStatusEnum.pending
-  );
+  const { accessToken, role } = useSessionStore();
   const [showModal, setShowModal] = useState<boolean>(false);
-  const { data, loading, error } = getDonationStatus({
-    accessToken,
-    status: "pending",
-  });
+  const [donation, setDonation] = useState<Donation[]>([]);
+  const [refresh, setRefresh] = useState<boolean>(false);
+  const { start, stop, loading } = useLoading();
 
-  const handleSubmit = async (i: number, did: string) => {
+  const getDonationFn = async () => {
+    start();
+    const donationList = await findManyReservation({
+      accessToken,
+    });
+
+    setDonation(donationList);
+
+    stop();
+  };
+
+  const handleSubmit = async ({
+    donationId,
+    reservationId,
+  }: {
+    donationId: string;
+    reservationId: string;
+  }) => {
     try {
+      await recieveDonation({
+        accessToken,
+        id: reservationId,
+      });
       await updateDonation({
         accessToken,
-        status: selectedStatus,
-        id: did,
+        status: "completed",
+        id: donationId,
       });
+      setDonation((prevDonations) =>
+        prevDonations.filter((donation) => donation.id !== reservationId)
+      );
     } catch (error) {
       console.error("Error updating status:", error);
     }
     setShowModal(false);
   };
 
+  const onRefresh = async () => {
+    setRefresh(true);
+    await getDonationFn();
+    setRefresh(false);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      getDonationFn();
+    }, [])
+  );
+
   if (loading) {
     return <Loading />;
   }
 
-  if (error) {
-    return <Text>Error...</Text>;
-  }
-
   return (
     <Box className="relative h-full">
-      <ScrollView>
-        {data.map((d: any, i: number) => (
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refresh} onRefresh={onRefresh} />
+        }
+      >
+        {donation.map((d: any, i) => (
           <CardContainer
-            title={`${d.title}`}
-            description={`${d.description}`}
-            key={i}
+            title={d.donation.title}
+            description={d.donation.description}
+            key={d.id}
           >
             <HStack className="mt-5 flex justify-between">
               <Box>
                 <Text className="text-sm">Donation Size</Text>
-                <Text className="font-semibold text-xl">{d.donationSize}</Text>
+                <Text className="font-semibold text-xl">
+                  {d.donation.donationSize}
+                </Text>
               </Box>
               <Box>
                 <Text className="text-sm">Transport</Text>
                 <Text className="font-semibold text-xl">
-                  {d.transportationMethod === "request_for_pickup"
-                    ? "Receiver will pickup"
-                    : "Organization will deliver"}
+                  {d.donation.transportationMethod === "request_for_pickup"
+                    ? "Request for pickup"
+                    : "I will deliver"}
                 </Text>
               </Box>
             </HStack>
             <Box className="mt-5 flex justify-between">
               <Text className="text-sm">Food Type</Text>
-              <Text className="font-semibold text-xl">{d.foodType}</Text>
+              <Text className="font-semibold text-xl">
+                {d.donation.foodType}
+              </Text>
             </Box>
             <Box className="mt-5">
               <Text>
-                {new Date(d.createdAt).toLocaleDateString("en-US", {
+                {new Date(d.donation.createdAt).toLocaleDateString("en-US", {
                   day: "numeric",
                   month: "short",
                   year: "numeric",
@@ -119,12 +140,11 @@ export default function HomeScreen() {
             </Box>
             <Button
               onPress={() => {
-                setSelectedStatus(DonationStatusEnum.reserved);
                 setShowModal(true);
               }}
-              className="mt-5"
+              className="mt-5 bg-cyan-500"
             >
-              <ButtonText>Reserved</ButtonText>
+              <ButtonText>Completed</ButtonText>
             </Button>
             <Modal
               isOpen={showModal}
@@ -158,7 +178,10 @@ export default function HomeScreen() {
                   </Button>
                   <Button
                     onPress={() => {
-                      handleSubmit(i, d.id);
+                      handleSubmit({
+                        donationId: d.donation.id,
+                        reservationId: d.id,
+                      });
                     }}
                   >
                     <ButtonText>Confirm</ButtonText>
@@ -169,7 +192,6 @@ export default function HomeScreen() {
           </CardContainer>
         ))}
       </ScrollView>
-      <CreateDonationButton />
     </Box>
   );
 }

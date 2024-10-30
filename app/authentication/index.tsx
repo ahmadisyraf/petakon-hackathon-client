@@ -17,7 +17,7 @@ import { VStack } from "@/components/ui/vstack";
 import useLoading from "@/hooks/useLoading";
 import { authenticateUser, getCurrentUser } from "@/services/user";
 import { useSessionStore } from "@/store/user";
-import { Link, Redirect, router } from "expo-router";
+import { Link, router } from "expo-router";
 import { useState } from "react";
 import { z } from "zod";
 
@@ -64,12 +64,18 @@ export default function SignInScreen() {
     if (session.accessToken) {
       setAccessToken(session.accessToken);
       setRole(user.role);
-      router.push("/(tabs)");
+
+      if (user.role === "user") {
+        router.push("/(user)");
+      }
+
+      if (user.role === "organization") {
+        router.push("/(organization)");
+      }
     }
 
     stop();
   };
-  
 
   return (
     <Box>
